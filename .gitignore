@@ -1,0 +1,14 @@
+#ignore all the files in __pycache__
+__pycache__/
+
+#ignore all the files in rasa-project2
+rasa-project2/
+
+#ignore all the fiels in testing_nlu
+testing_nlu/
+
+#ignore all the files in venv
+venv/
+
+#ignore all the ui fiels 
+*.ui

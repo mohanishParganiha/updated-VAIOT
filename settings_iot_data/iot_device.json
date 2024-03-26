@@ -1,0 +1,51 @@
+[
+    {
+        "id": "front door camera",
+        "type": "camera",
+        "protocol": "http",
+        "ip_address": "192.168.1.123"
+    },
+    {
+        "id": "thermostat",
+        "type": "sensor",
+        "protocol": "http",
+        "ip_address": "192.168.1.234"
+    },
+    {
+        "id": "living room fan",
+        "type": "fan",
+        "protocol": "http",
+        "ip_address": "192.168.1.45"
+    },
+    {
+        "id": "kitchen lights",
+        "type": "bulb",
+        "protocol": "http",
+        "ip_address": "192.168.1.156"
+    },
+    {
+        "id": "refrigerator",
+        "type": "refrigerator",
+        "protocol": "http",
+        "ip_address": "192.168.1.67"
+    },
+    {
+        "id": "bedroom ac",
+        "type": "ac",
+        "protocol": "http",
+        "ip_address": "192.168.1.78"
+    },
+    {
+        "id": "coffee machine",
+        "type": "smart_switch",
+        "protocol": "http",
+        "ip_address": "192.168.1.89"
+    },
+    {
+        "id": "living room light",
+        "type": "bulb",
+        "protocol": "mqtt",
+        "ip_address": "192.168.1.71"
+    }
+
+]
