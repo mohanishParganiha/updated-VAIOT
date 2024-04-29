@@ -6,10 +6,12 @@ import webbrowser
 from urllib.parse import quote
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import pyqtSignal
 
 
 from iot_device_controller import perform_action
 from gui.main_window_design_3 import Ui_MainWindow
+from do_tasks import search, visit_site, tomorrowsWeather,currentWeather, weatherForecastOnSpeceficDay
 
 class requestNLU:
     def __init__(self,start_event) -> None:
@@ -40,15 +42,15 @@ class requestNLU:
    
 
 
-class VA:
+class VA():
 
     def __init__(self,start_event) -> None:
         self.lock = Lock()
         self.start_event = start_event
 
-    def va(self,logic_in,speaker_in):  
+    def va(self,logic_in,speaker_in,listener_out_queue):  
         while True:
-           
+            # self.printSignal(listener_out_queue.get())
             if self.start_event.is_set():
                 dataReturnedFromNlu = logic_in.recv()
                 intent = dataReturnedFromNlu[0]
@@ -58,6 +60,7 @@ class VA:
                     speaker_in.send('hello, how can i help you?')
                     count = 0
                     while count <8:
+                        # self.printSignal(listener_out_queue.get())
                         #check the output from nlu again
                         dataReturnedFromNlu = logic_in.recv()
                         intent = dataReturnedFromNlu[0]
@@ -67,60 +70,89 @@ class VA:
 
                         if intent == "goodbye" :
                             speaker_in.send('have a good day')
+                            # self.printSignal('have a good day')
+
                             break
                         elif intent == "question_asked" :
+                            print(entity)
                             speaker_in.send('question asked')
+                            # self.printSignal('question asked')
 
                         elif intent == "get_current_weather" :
                             speaker_in.send('getting current weather')
+                            for w in currentWeather():
+                                speaker_in.send(w)
+                                # self.printSignal(w)
 
                         elif intent == "get_weather_tomorrow" :
                             speaker_in.send("gettign tomorrow's weather")
+                            for w in tomorrowsWeather():
+                                speaker_in.send(w)
+                                # self.printSignal(w)
 
                         elif intent == "get_weather_forecast" :
-                            speaker_in.send('getting weather forecast')
+                            speaker_in.send(f'getting weather forecast for {str(entity[0]["date"])}')
+                            for w in weatherForecastOnSpeceficDay(str(entity[0]["date"])):
+                                speaker_in.send(w)
+                                # self.printSignal(w)
+
 
                         elif intent == "get_news" :
                             speaker_in.send('getting news')
+                            print(entity)
+
 
                         elif intent == "get_news_category" :
                             speaker_in.send('getting news by catergory')
+                            print(entity)
 
                         elif intent == "make_list" :
                             speaker_in.send('making a list')
+                            print(entity)
 
                         elif intent == "take_notes" :
                             speaker_in.send('taking notes')
+                            print(entity)
 
                         elif intent == "open_app" :
                             speaker_in.send('opening app')
+                            print(entity)
 
                         elif intent == "open_file" :
                             speaker_in.send('opening file')
+                            print(entity)
 
                         elif intent == "visit_page" :
                             speaker_in.send('visiting page')
+                            print(entity)
 
                         elif intent == "search" :
                             speaker_in.send('searching ')
+                            print(entity)
 
                         elif intent == "send_social_media_message" :
                             speaker_in.send('sending social message on social media')
+                            print(entity)
 
                         elif intent == "send_text_message" :
                             speaker_in.send('sending text message ')
+                            print(entity)
 
                         elif intent == "send_email" :
                             speaker_in.send('sending email')
+                            print(entity)
 
                         elif intent == 'set_alarm':
                             speaker_in.send('setting alarm')
+                            print(entity)
 
                         elif intent == 'check_alarms':
                             speaker_in.send('checking alarms')
+                            print(entity)
 
                         elif intent == 'delete_alarm':
                             speaker_in.send('deleting alarm')
+                            print(entity)
 
                         elif intent == 'light_on':
                             speaker_in.send(f'turning on the {entity[0]["device"]}')
@@ -284,13 +316,15 @@ def set_start_event(event):
     else:
         event.set()
 
+
+
 if __name__ == "__main__":
     start_event = Event()
     # data_queue = Queue()
     listener = Listening(start_event=start_event)
 
     Va = VA(start_event=start_event)
-
+    # # printSignal = Va.printSignal
     speaker = Speaker(start_event=start_event)
 
     request_nlu = requestNLU(start_event=start_event)
@@ -303,7 +337,7 @@ if __name__ == "__main__":
     listener_process = Process(target=listener.listen,args=(listener_out,listener_out_queue))
     nlu_process = Process(target=request_nlu.send_and_get,args=(listener_in,logic_out))
     speaker_process = Process(target=speaker.send_text_to_speaker, args=(speaker_out,))
-    logic_process = Process(target=Va.va,args=(logic_in,speaker_in))
+    logic_process = Process(target=Va.va,args=(logic_in,speaker_in,listener_out_queue))
 
 
     app = QtWidgets.QApplication(sys.argv)
@@ -317,6 +351,7 @@ if __name__ == "__main__":
     nlu_process.start()
     speaker_process.start()
 
+    # printSignal.connect(ui.printOnScreen)
     ui.pushButton.clicked.connect(lambda:set_start_event(start_event))
 
     sys.exit(app.exec())
