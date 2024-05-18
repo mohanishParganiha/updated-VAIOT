@@ -3,40 +3,39 @@ import speech_recognition as sr
 from multiprocessing import Lock, Process, Queue
 
 class Listening:
-    def __init__(self,start_event):
+    def __init__(self):
         self.recognizer = sr.Recognizer()
         self.lock = Lock()
         self.text = 'none'
-        self.start_event = start_event
+        self.start_event = True
 
-    def listen(self, listener_out, listener_out_queue):
-        while True:
-            if self.start_event.is_set():
+    def listen(self, listener_in):
+        if self.start_event:
+            try:
+                with sr.Microphone() as mic:
+                    print('listening....')
+                    audio = self.recognizer.listen(mic)
+                    if audio is None:
+                        pass
                 try:
-                    with sr.Microphone() as mic:
-                        print('listening....')
-                        audio = self.recognizer.listen(mic)
-                        if audio is None:
-                            break
-                    try:
-                        self.text = self.recognizer.recognize_google(audio)
+                    self.text = self.recognizer.recognize_google(audio)
 
-                    except sr.UnknownValueError:
-                        self.text = 'none'
+                except sr.UnknownValueError:
+                    self.text = 'none'
 
-                    except sr.RequestError as e:
-                        print(e)
-                    except Exception:
-                        print('error')
+                except sr.RequestError as e:
+                    print(e)
+                except Exception:
+                    print('error')
 
-                    with self.lock:
-                        print("listener heard",self.text)
-                    listener_out.send(self.text)
-                    if self.text != 'none':
-                        listener_out_queue.put(self.text)
+                with self.lock:
+                    print("listener heard",self.text)
+                listener_in.send(self.text)
+        
+            except StopListeningException:
+                print('listening stopped')
 
-                except StopListeningException:
-                    print('listening stopped')
+        return self.text
 
     # def start_listening(self):
     #     self.isListening = True

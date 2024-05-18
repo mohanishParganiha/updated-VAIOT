@@ -9,14 +9,17 @@
 
 
 from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtWidgets import  QGraphicsDropShadowEffect
+from PyQt5.QtWidgets import  QGraphicsDropShadowEffect, QMainWindow
 from PyQt5.QtGui import QColor
-from PyQt5.QtCore import pyqtSignal,pyqtSlot
+from PyQt5.QtCore import pyqtSignal,pyqtSlot, QObject
 
 import os
 from settings_window.settings_window import settings_Window
 
-class Ui_MainWindow(object):
+class Ui_MainWindow(QMainWindow, QObject):
+
+    progress = pyqtSignal(str) 
+
     def setupUi(self, MainWindow):
         current_dir = os.path.dirname(__file__)
         MainWindow.setObjectName("MainWindow")
@@ -258,6 +261,8 @@ class Ui_MainWindow(object):
         #signal to change frame color 
         self.pushButton.clicked.connect(self.animate_frame_border_color)
 
+        self.progress.connect(self.printOnScreen)
+        
 
         self.shadow_effect = QGraphicsDropShadowEffect(self.frame_2)
         self.shadow_effect.setBlurRadius(30)

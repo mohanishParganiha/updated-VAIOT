@@ -4,7 +4,7 @@ import requests
 # Function to perform actions based on device type and action
 def perform_action(device_id, action, action_value=None):
     # Load devices from JSON file
-    with open('iot_device.json', 'r') as file:
+    with open('./settings_iot_data/iot_device.json', 'r') as file:
         devices = json.load(file)
     
     # Find the device with the given ID
@@ -14,6 +14,9 @@ def perform_action(device_id, action, action_value=None):
         ip = device['ip_address']
 
         if device_type == 'bulb':
+            print(device_id,action)
+            print(device_type, ip)
+            action = action.lower()
             if action == 'turn_on':
                 print(f"Bulb {device_id} is turned on")
                 perform(ip=ip,endpoint="/led",value=1)
@@ -107,4 +110,4 @@ def perform(ip, endpoint, value):
 #     perform_action('bedroom ac', 'set_mode', 'cool')
 
 if __name__ == "__main__":
-    perform_action('living room light','turn_off')
+    perform_action('room light','turn_off')
