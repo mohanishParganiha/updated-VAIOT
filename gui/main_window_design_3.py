@@ -19,6 +19,7 @@ from settings_window.settings_window import settings_Window
 class Ui_MainWindow(QMainWindow, QObject):
 
     progress = pyqtSignal(str) 
+    close_event = pyqtSignal()
 
     def setupUi(self, MainWindow):
         current_dir = os.path.dirname(__file__)
@@ -257,7 +258,8 @@ class Ui_MainWindow(QMainWindow, QObject):
         #signals form settings button to open settings page
         self.settingsButton.clicked.connect(self.open_settings_window)
         #signal form quit button to close the main window
-        self.pushButton_4.clicked.connect(MainWindow.close)
+        self.pushButton_4.clicked.connect(MainWindow.close )
+        self.pushButton_4.clicked.connect(self.close_event_function )
         #signal to change frame color 
         self.pushButton.clicked.connect(self.animate_frame_border_color)
 
@@ -313,6 +315,9 @@ class Ui_MainWindow(QMainWindow, QObject):
 
     def clearOnScreen(self):
         self.vaiot_response.clear()
+
+    def close_event_function(self):
+        self.close_event.emit()
 
 if __name__ == "__main__":
     import sys

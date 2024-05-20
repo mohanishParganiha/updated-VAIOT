@@ -7,11 +7,12 @@ from urllib.parse import quote
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import pyqtSignal
+from  time import sleep
 
 
 from iot_device_controller import perform_action
 from gui.main_window_design_3 import Ui_MainWindow
-from do_tasks import open_app, search, visit_site, tomorrowsWeather,currentWeather, getNewsByCategory, save_list_to_file, weatherForecastOnSpeceficDay, getNews
+from do_tasks import close_app, open_app, search, visit_site, tomorrowsWeather,currentWeather, getNewsByCategory, save_list_to_file, weatherForecastOnSpeceficDay, getNews
 
 class requestNLU():
     def __init__(self,start_event) -> None:
@@ -27,17 +28,18 @@ class requestNLU():
                 except Exception as e:
                     print(e)
                 
-                if message != 'none':
-                    message = message.strip()
-                    result = requests.post('http://localhost:5005/model/parse',json={'text':message}).json()
-                    intent = result['intent']['name']
-                    entities = result['entities']
-                    entity_value = []
-                    for e in entities:
-                        entity_value.append({e['entity']:e['value']})
-                    
-                    # print(entity_value)
-                    logic_in.send([intent,entity_value])
+                if message == 'none':
+                    logic_in.send('none')
+                message = message.strip()
+                result = requests.post('http://localhost:5005/model/parse',json={'text':message}).json()
+                intent = result['intent']['name']
+                entities = result['entities']
+                entity_value = []
+                for e in entities:
+                    entity_value.append({e['entity']:e['value']})
+                
+                # print(entity_value)
+                logic_in.send([intent,entity_value])
 
    
 
@@ -58,7 +60,7 @@ class VA():
 
                 dataReturnedFromNlu = logic_out.recv()
                 intent = dataReturnedFromNlu[0]
-                if intent == "greet" :
+                if  intent == "greet" :
                     print_to_screen_out.send('SAM: hello i am sam , how can i help you?')
                     speaker_in.send('hello i am sam , how can i help you?')
                     count = 0
@@ -71,17 +73,19 @@ class VA():
                         intent = dataReturnedFromNlu[0]
                         entity = dataReturnedFromNlu[1]
 
-                        print('intent: ',intent)
-                        print("entity: ",entity)
-                        # print(intent)
+                        print("intent",intent)
+                        print('entity',entity)
+                        if query == 'none' :
+                            count += 1
 
                         if intent == "goodbye" :
                             print_to_screen_out.send('SAM: have a good day')
                             speaker_in.send('have a good day')
-
                             break
+
                         elif intent == "question_asked" :
-                            print_to_screen_out.send('SAM: question asked')
+                            print(query)
+                            print_to_screen_out.send(f'SAM: question asked {entity}')
                             speaker_in.send('question asked')
 
                         elif intent == "get_current_weather" :
@@ -135,7 +139,7 @@ class VA():
                             #     else:
                             #         topic = query
                             #         break
-                          
+                        
                             # items = []
                             # speaker_in.send("Start making the list. When you're done, end it by saying 'end the list' to finish.")
                             # counter = 0
@@ -166,6 +170,11 @@ class VA():
                             speaker_in.send(f'opening {entity[0]["app_name"]}')
                             open_app(entity[0]['app_name'])
 
+                        elif intent == "close_app":
+                            print_to_screen_out.send(f'SAM: closing {entity[0]["app_name"]}')
+                            speaker_in.send(f'closing {entity[0]["app_name"]}')
+                            close_app(entity[0]["app_name"])
+
                         elif intent == "open_file" :
                             print_to_screen_out.send('SAM: these functionality are currently under development')
                             speaker_in.send('these functionality are currently under development')
@@ -180,8 +189,14 @@ class VA():
                         elif intent == "search" :
                             print_to_screen_out.send('SAM: searching')
                             speaker_in.send('searching ')
-                            search(engine=entity[1]['app_name'],searchItem=entity[0]['search_item'])
-                            
+                            try:
+                                search(engine=entity[1]['app_name'],searchItem=entity[0]['search_item'])
+                            except:
+                                pass
+                            try:
+                                search(engine='google',searchItem=entity[0]['seach_item'])
+                            except:
+                                pass
 
                         elif intent == "send_social_media_message" :
                             print_to_screen_out.send('SAM: these functionality are currently under development')
@@ -276,7 +291,6 @@ class VA():
                             speaker_in.send(f'turning on the {entity[0]["device"]}')
                             # perform_action(entity[0]["device"],'tv_on')
 
-                    #change form here needed in entity -----------------------------------------
                         elif intent == 'tv_off':
                             print_to_screen_out.send(f'SAM: turning off the {entity[0]}')
                             speaker_in.send(f'turning off the {entity[0]}')
@@ -361,9 +375,8 @@ class VA():
                             # perform_action(entity[0],'iot_device_status')
 
 
-
-                        else:
-                            count += 1
+                    
+                            
 
 
     
@@ -444,6 +457,16 @@ if __name__ == "__main__":
         if print_to_screen_out.poll():
             text = print_to_screen_out.recv()
             ui.progress.emit(text)
+
+    def exit_the_program():
+        nlu_process.close()
+        speaker_process.close()
+        logic_process.close()
+        sleep(1)
+        sys.exit()
+
+    ui.close_event.connect(exit_the_program)
+
 
     timer = QtCore.QTimer()
     timer.timeout.connect(check_pipe_for_screen)

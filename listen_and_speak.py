@@ -14,11 +14,12 @@ class Listening:
             try:
                 with sr.Microphone() as mic:
                     print('listening....')
+                    self.recognizer.pause_threshold = 1
                     audio = self.recognizer.listen(mic)
                     if audio is None:
                         pass
                 try:
-                    self.text = self.recognizer.recognize_google(audio)
+                    self.text = self.recognizer.recognize_google(audio, language ='en-in')
 
                 except sr.UnknownValueError:
                     self.text = 'none'

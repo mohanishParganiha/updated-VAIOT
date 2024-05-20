@@ -7,7 +7,10 @@ from urllib.parse import quote
 from newsapi import NewsApiClient
 import subprocess
 import wolframalpha
+import platform
+
 app_id = "R5G7P8-69QK2P28PK"
+
 client = wolframalpha.Client(app_id=app_id)
 
 newsapi = NewsApiClient(api_key='f871d1b4a83f468a8af0179a474618c2')
@@ -51,7 +54,14 @@ def open_app(app_name):
         sleep(0.5)
         return True
 
-
+def close_app(app_name):
+    app_name = app_name.join('.exe')
+    if platform.system() == "Windows":
+        subprocess.run(["taskkill", "/f", "/im", app_name], shell=True)
+    elif platform.system() == "Linux" or platform.system() == "Darwin":
+        subprocess.run(["pkill", "-f", app_name])
+    else:
+        print("Unsupported platform")
 
 def currentWeather():
     res = client.query("current weather in bhilai")
@@ -110,5 +120,6 @@ def save_list_to_file(topic, items):
     print("List saved to file:", file_name)
 
 
-if __name__ == "__main__":
-    search(engine='google',searchItem='instagram')
+
+
+# if __name__ == "__main__":
